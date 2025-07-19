@@ -49,6 +49,15 @@ async function sendTweet(content, imageUrl = null) {
     console.log('🔹 Tweet textbox ready.');
 
     // ─── DEBUG DUMP ─────────────────────────────────────────
+    console.log('🔹 CURRENT URL:', page.url());
+    const allTestIds = await page.$$eval('[data-testid]', els =>
+      els.map(el => el.getAttribute('data-testid'))
+    );
+    console.log('🔍 ALL data-testids:', allTestIds);
+    const html = await page.content();
+    fs.writeFileSync('compose_dump.html', html);
+    console.log('🔹 Wrote full page HTML to compose_dump.html');
+
     console.log('🔹 Capturing debug screenshot...');
     await page.screenshot({ path: 'compose-debug.png', fullPage: true });
     console.log('🔹 Debug screenshot saved.');
@@ -75,9 +84,10 @@ async function sendTweet(content, imageUrl = null) {
     console.log('🔹 Typing tweet content...');
     await page.keyboard.type(content, { delay: 50 });
     await page.screenshot({ path: 'typing.png', fullPage: true });
+
     console.log('🔹 Clicking Tweet button...');
-    await page.click('div[data-testid="tweetButtonInline"]');
-    console.log('Tweet submitted successfully.');
+    await page.waitForSelector('[data-testid="tweetButton"]', { visible: true, timeout: 15000 });
+    await page.click('button[data-testid="tweetButton"]');    console.log('✅ Tweet submitted successfully.');
 
     // ─── CLEANUP ────────────────────────────────────────────
     if (tempImage) {
@@ -90,7 +100,7 @@ async function sendTweet(content, imageUrl = null) {
     console.log('🔹 Browser closed.');
 
   } catch (err) {
-    console.error('❌ sendTweet failed:', err);
+    console.error('sendTweet failed:', err);
     if (browser) {
       try { await browser.close(); } catch (_) {}
     }
