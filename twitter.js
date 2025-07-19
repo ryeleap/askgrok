@@ -21,6 +21,34 @@ async function sendTweet(content, imageUrl = null) {
     // Open composer
     await page.click('a[data-testid="SideNav_NewTweet_Button"]');
     await page.waitForSelector('div[role="textbox"]', { timeout: 15000 });
+    await page.focus('div[role="textbox"]');
+
+    console.log(content);
+
+
+function parseAndAddMention(input) {
+  // Split the input into lines
+  const lines = input.split('\n').map(line => line.trim());
+
+  // Remove any empty lines
+  const nonEmptyLines = lines.filter(line => line.length > 0);
+
+  // Get the bottom-most sentence (last item in the array)
+  const lastSentence = nonEmptyLines[nonEmptyLines.length - 1];
+
+  // Prepend @grok and return the result
+     const mentionText = `@grok ${lastSentence}`;
+
+  // Get the top-most text (first item in the array)
+  const firstSentence = nonEmptyLines[0];
+
+  // Append two new lines and the top-most text
+  return `${mentionText}\n\n${firstSentence}`;
+}
+
+
+    content = parseAndAddMention(content)
+    console.log(content);
 
     // Optional image
     let tempImage;
