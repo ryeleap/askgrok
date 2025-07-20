@@ -19,10 +19,10 @@ async function sendTweet(content, imageUrl = null) {
     await page.fill('input[name="text"]', process.env.TWITTER_USERNAME);
     await page.keyboard.press('Enter');
 
-    await page.waitForSelector('input[type="text"], input[type="email"]');
-    await page.fill('input[type="text"], input[type="email"]', process.env.TWITTER_VERIFICATION_NUMBER);
-    await page.screenshot({ path: 'number.png' });
-    await page.keyboard.press('Enter');
+    // await page.waitForSelector('input[type="text"], input[type="email"]');
+    // await page.fill('input[type="text"], input[type="email"]', process.env.TWITTER_VERIFICATION_NUMBER);
+    // await page.screenshot({ path: 'number.png' });
+    // await page.keyboard.press('Enter');
 
     await page.screenshot({ path: 'login_page.png' });
 
@@ -81,10 +81,50 @@ async function sendTweet(content, imageUrl = null) {
     await page.waitForSelector('[data-testid="tweetButton"]', { timeout: 15000 });
     await page.click('button[data-testid="tweetButton"]');
 
+    // await page.getByRole('button', { name: 'Got it' }).click();
+    await page.goto('https://x.com/imgrokkingit');
+    console.log('🔹 Waiting for Grok’s response...');
+    await page.waitForTimeout(60000);
+
+    // const buttons = await page.$$eval('button', els =>
+    //   els.map(el => ({
+    //     text: el.innerText.trim(),
+    //     testid: el.getAttribute('data-testid'),
+    //     ariaLabel: el.getAttribute('aria-label'),
+    //     class: el.className
+    //   }))
+    // );
+
+    // console.log('🔘 ALL BUTTONS:', buttons);
+    // fs.writeFileSync('button_dump.json', JSON.stringify(buttons, null, 2));
+    await page.screenshot({ path: 'replies.png', fullPage: true });
+    await page.click('a[role="tab"]:has-text("Replies")');
+
+    await page.screenshot({ path: 'beforeclicktweet.png', fullPage: true });
+    await page.waitForTimeout(1500);
+
+    await page.waitForSelector('article[role="article"]');
+    await page.click('article[role="article"]');
+
+    await page.waitForTimeout(1500);
+
+    const tweets = await page.$$('article[role="article"]');
+
+    if (tweets.length > 1) {
+      const grokTweet = tweets[1];
+      await grokTweet.screenshot({ path: 'grok_reply.png' });
+      console.log('✅ Cropped screenshot of Grok’s reply taken.');
+    } else {
+      console.warn('⚠️ Grok reply not found, falling back to full-page screenshot.');
+      await page.screenshot({ path: 'grok_reply.png', fullPage: true });
+    }
+
+
     // Cleanup
     if (tempImage) fs.unlinkSync(tempImage);
   } finally {
     await browser.close();
+    return path.join(__dirname, 'grok_reply.png');
   }
 }
 

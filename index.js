@@ -57,12 +57,17 @@ client.on("messageCreate", async (message) => {
 
   await message.reply("Prompting the bot...");
   try {
-    await sendTweet(textToTweet, imageUrl);
-    await message.reply("Tweet sent!");
+    const screenshotPath = await sendTweet(textToTweet, imageUrl);
+    await message.reply({
+      content: "Tweet sent!",
+      files: [screenshotPath],
+    });
   } catch (err) {
     console.error("sendTweet error:", err);
     await message.reply("Failed to send tweet.");
   }
+
+
 });
 
 client.login(process.env.DISCORD_TOKEN);
