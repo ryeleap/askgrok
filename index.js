@@ -1,17 +1,10 @@
-console.log("🔌 index.js loaded");
 require("dotenv").config();
 
 let sendTweet;
-
 try {
-  console.log("🔌 requiring twitter.js…");
   ({ sendTweet } = require("./twitter"));
-  console.log(
-    "🔌 twitter.js required successfully, sendTweet =",
-    typeof sendTweet,
-  );
 } catch (err) {
-  console.error("❌ require(./twitter) failed:", err);
+  console.error("require(./twitter) failed:", err);
 }
 
 const { Client, GatewayIntentBits } = require("discord.js");
@@ -29,7 +22,7 @@ client.once("ready", () => {
 });
 
 client.on("messageCreate", async (message) => {
-  console.log("📨 [DBG] messageCreate:", {
+  console.log("messageCreate:", {
     content: message.content,
     author: message.author.tag,
     reference: message.reference?.messageId,
@@ -37,7 +30,6 @@ client.on("messageCreate", async (message) => {
 
   if (message.author.bot) return;
   if (!message.mentions.has(client.user)) return;
-
   const ref = message.reference;
   if (!ref?.messageId) {
     return message.reply("Please reply to a message when mentioning me.");
@@ -55,19 +47,22 @@ client.on("messageCreate", async (message) => {
   const textToTweet = `${original.content}\n\n${prompt}`;
   const imageUrl = original.attachments.first()?.url || null;
 
-  await message.reply("Prompting the bot...");
+  await message.reply("Working on it...");
   try {
     const screenshotPath = await sendTweet(textToTweet, imageUrl);
-    await message.reply({
-      content: "Tweet sent!",
-      files: [screenshotPath],
-    });
-  } catch (err) {
+    if (screenshotPath) {
+      await message.reply({
+        content: "Tweet sent!",
+        files: [screenshotPath],
+      });
+    } else {
+      await message.reply("Tweet sent, but no screenshot was captured.");
+    }
+  }
+  catch (err) {
     console.error("sendTweet error:", err);
     await message.reply("Failed to send tweet.");
   }
-
-
 });
 
 client.login(process.env.DISCORD_TOKEN);
